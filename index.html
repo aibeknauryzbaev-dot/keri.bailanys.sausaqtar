@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Саусақтар жаттығуы - Кері байланыс</title>
+    <style>
+        /* =========================================
+           НЕГІЗГІ СТИЛЬДЕР МЕН БАПТАУЛАР
+           ========================================= */
+        :root {
+            --bg-color: #f0f8ff;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --success-bg: #e6f9ec;
+            --success-text: #2d7a4d;
+            --warning-bg: #fff8d6;
+            --warning-text: #966b04;
+            --danger-bg: #ffeef0;
+            --danger-text: #b32d3e;
+            --skin-color: #ffbfa3; /* Саусақтардың түсі */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', 'Comic Sans MS', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Негізгі контейнер (Карточка) */
+        .card {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        /* =========================================
+           БАТЫРМАЛАР СТИЛІ
+           ========================================= */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 20px;
+            padding: 18px 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-success { background: var(--success-bg); color: var(--success-text); }
+        .btn-success:hover { background: #d1f4db; }
+
+        .btn-warning { background: var(--warning-bg); color: var(--warning-text); }
+        .btn-warning:hover { background: #ffefb3; }
+
+        .btn-danger { background: var(--danger-bg); color: var(--danger-text); }
+        .btn-danger:hover { background: #ffd6db; }
+
+        .btn-reset {
+            background: #f1f3f5;
+            color: #495057;
+            margin-top: 30px;
+            font-size: 1rem;
+            padding: 12px 20px;
+            border-radius: 15px;
+            box-shadow: none;
+        }
+        .btn-reset:hover { background: #e9ecef; }
+
+        /* =========================================
+           НӘТИЖЕ АЙМАҒЫ ЖӘНЕ АНИМАЦИЯЛАР
+           ========================================= */
+        #result-section {
+            display: none; /* Бастапқыда жасырын */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-top: 20px;
+            min-height: 60px;
+        }
+
+        /* CSS Саусақтар / Алақан моделі */
+        .animation-box {
+            position: relative;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .hand-wrapper {
+            position: relative;
+            width: 120px;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .fingers {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 90px;
+            gap: 4px;
+        }
+
+        .finger {
+            background: var(--skin-color);
+            border-radius: 15px 15px 0 0;
+            transform-origin: bottom;
+            transform: scaleY(0); /* Бастапқыда жасырын тұрады */
+        }
+
+        .f-thumb { width: 22px; height: 50px; border-radius: 15px 0 0 15px; margin-right: 2px; }
+        .f-index { width: 22px; height: 80px; }
+        .f-middle { width: 22px; height: 90px; }
+        .f-ring { width: 20px; height: 75px; }
+        .f-pinky { width: 18px; height: 60px; }
+
+        .palm {
+            background: var(--skin-color);
+            height: 65px;
+            width: 110px;
+            border-radius: 15px 15px 35px 35px;
+            margin: -5px auto 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Қосымша элементтер (Сұрақ белгісі, Бұлт) */
+        .extra-icon {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0;
+            transform: scale(0);
+        }
+        .question-mark { top: -20px; right: -20px; }
+        .help-cloud { 
+            top: -40px; 
+            left: -40px; 
+            background: white; 
+            padding: 10px; 
+            border-radius: 20px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--danger-text);
+            white-space: nowrap;
+        }
+        .help-cloud::after {
+            content: '💭';
+            font-size: 2rem;
+            position: absolute;
+            right: -25px;
+            bottom: -15px;
+        }
+
+        /* --- Анимация кластары --- */
+        
+        /* 1) Түсіндім: 5 саусақ кезекпен шығады */
+        .state-success .finger {
+            animation: growUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .state-success .f-thumb { animation-delay: 0.1s; }
+        .state-success .f-index { animation-delay: 0.2s; }
+        .state-success .f-middle { animation-delay: 0.3s; }
+        .state-success .f-ring { animation-delay: 0.4s; }
+        .state-success .f-pinky { animation-delay: 0.5s; }
+
+        /* 2) Сұрағым бар: Тек сұқ саусақ шығады, жанында сұрақ белгісі */
+        .state-warning .f-index {
+            animation: growUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .state-warning .question-mark {
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+        }
+
+        /* 3) Түсінбедім: Қол төмен қарайды, бұлт шығады */
+        .state-danger .hand-wrapper {
+            transform: rotate(180deg);
+        }
+        .state-danger .finger {
+            animation: growUp 0.4s ease forwards;
+        }
+        .state-danger .help-cloud {
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
+        }
+
+        /* =========================================
+           КОНФЕТТИ ЖӘНЕ КЕЙФРЕЙМДЕР
+           ========================================= */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            z-index: 100;
+            top: -10px;
+            animation: fall linear forwards;
+        }
+
+        @keyframes growUp {
+            0% { transform: scaleY(0); }
+            100% { transform: scaleY(1); }
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        /* Мобильді құрылғыларға бейімдеу */
+        @media (max-width: 480px) {
+            .btn { font-size: 1.1rem; padding: 15px 20px; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Кері байланыс</h1>
+        <p class="subtitle">Саусақтар жаттығуын қалай түсіндің?</p>
+
+        <!-- Опциялар (Батырмалар) -->
+        <div id="options-section" class="btn-container">
+            <button class="btn btn-success" onclick="selectFeedback('success')">
+                <span style="font-size: 1.5rem;">✅</span> Түсіндім
+            </button>
+            <button class="btn btn-warning" onclick="selectFeedback('warning')">
+                <span style="font-size: 1.5rem;">🤔</span> Әлі де сұрағым бар
+            </button>
+            <button class="btn btn-danger" onclick="selectFeedback('danger')">
+                <span style="font-size: 1.5rem;">❓</span> Түсінбедім
+            </button>
+        </div>
+
+        <!-- Нәтиже аймағы (Анимация + Мәтін) -->
+        <div id="result-section">
+            <div class="animation-box">
+                <div id="hand-container" class="hand-wrapper">
+                    <!-- Саусақтар -->
+                    <div class="fingers">
+                        <div class="finger f-thumb"></div>
+                        <div class="finger f-index"></div>
+                        <div class="finger f-middle"></div>
+                        <div class="finger f-ring"></div>
+                        <div class="finger f-pinky"></div>
+                    </div>
+                    <!-- Алақан -->
+                    <div class="palm"></div>
+                </div>
+                <!-- Қосымша эффектілер -->
+                <div class="extra-icon question-mark">❓</div>
+                <div class="extra-icon help-cloud">Көмек керек</div>
+            </div>
+            
+            <div id="result-text" class="result-text"></div>
+            
+            <button class="btn btn-reset" onclick="resetFeedback()">
+                🔄 Қайта таңдау
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Нәтижелерге арналған мәтіндер мен түстер
+        const feedbackData = {
+            'success': {
+                text: "Жарайсың! Келесі тапсырмаға өтеміз. 🎉",
+                color: "var(--success-text)"
+            },
+            'warning': {
+                text: "Сұрағыңды қой — бірге талқылаймыз. 🤝",
+                color: "var(--warning-text)"
+            },
+            'danger': {
+                text: "Қай жері қиын болды? Мұғалім көмектеседі. ❤️",
+                color: "var(--danger-text)"
+            }
+        };
+
+        // DOM элементтерін сақтап қою
+        const optionsSection = document.getElementById('options-section');
+        const resultSection = document.getElementById('result-section');
+        const handContainer = document.getElementById('hand-container');
+        const resultTextElement = document.getElementById('result-text');
+
+        // Оқушы батырманы басқанда шақырылатын негізгі функция
+        function selectFeedback(type) {
+            // 1. Батырмаларды жасырып, нәтиже блогын шығару
+            optionsSection.style.display = 'none';
+            resultSection.style.display = 'block';
+
+            // 2. Алдыңғы анимация кластарын тазалау
+            handContainer.parentElement.className = 'animation-box'; 
+            
+            // 3. Таңдалған типке сай класс қосу (CSS анимациясын іске қосады)
+            // setTimeout қолданамыз, себебі DOM жаңарып, анимация басынан басталуы керек
+            setTimeout(() => {
+                handContainer.parentElement.classList.add(`state-${type}`);
+            }, 50);
+
+            // 4. Мәтін мен түсті орнату
+            resultTextElement.innerHTML = feedbackData[type].text;
+            resultTextElement.style.color = feedbackData[type].color;
+
+            // 5. Конфетти шашу (Балаларды қуанту үшін барлық жағдайда кішкене шашылады, 
+            // бірақ 'success' кезінде көбірек шашуға болады)
+            let confettiCount = type === 'success' ? 60 : 25;
+            shootConfetti(confettiCount);
+        }
+
+        // Қайта таңдау батырмасының функциясы
+        function resetFeedback() {
+            // Нәтижені жасырып, батырмаларды қайта шығару
+            resultSection.style.display = 'none';
+            optionsSection.style.display = 'flex';
+            
+            // Анимацияларды бастапқы қалпына келтіру
+            handContainer.parentElement.className = 'animation-box';
+        }
+
+        // Жеңіл конфетти жасау функциясы (ешқандай сыртқы кітапханасыз)
+        function shootConfetti(amount) {
+            const colors = ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a'];
+            
+            for (let i = 0; i < amount; i++) {
+                let confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Кездейсоқ позиция мен түс
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Кездейсоқ пішін (кейбіреулері дөңгелек болады)
+                if(Math.random() > 0.5) confetti.style.borderRadius = '50%';
+                
+                // Кездейсоқ түсу жылдамдығы мен өлшемі
+                let duration = Math.random() * 2 + 2; // 2s - 4s
+                let delay = Math.random() * 1;
+                confetti.style.animationDuration = duration + 's';
+                confetti.style.animationDelay = delay + 's';
+                
+                let size = Math.random() * 8 + 5; // 5px - 13px
+                confetti.style.width = size + 'px';
+                confetti.style.height = size + 'px';
+                
+                document.body.appendChild(confetti);
+                
+                // Анимация біткен соң DOM-нан өшіру
+                setTimeout(() => {
+                    confetti.remove();
+                }, (duration + delay) * 1000);
+            }
+        }
+    </script>
+</body>
+</html>
